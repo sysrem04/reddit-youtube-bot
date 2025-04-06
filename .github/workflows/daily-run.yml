@@ -1,30 +1,27 @@
-name: Daily Upload
+name: Daily Run
 
 on:
   schedule:
-    - cron: '0 12 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # Setiap hari jam 00:00 UTC (07:00 WIB)
+  workflow_dispatch:     # Bisa dijalankan manual juga dari GitHub UI
 
 jobs:
-  run-bot:
+  run-daily:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      - name: ⬇️ Clone repo
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: 🐍 Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run the bot
-        env:
-          GOOGLE_CLIENT_SECRET_JSON: ${{ secrets.GOOGLE_CLIENT_SECRET_JSON }}
+      - name: 📦 Install dependencies
         run: |
-          mkdir -p app/creds
-          echo "$GOOGLE_CLIENT_SECRET_JSON" > app/creds/client_secret.json
-          python3 app/main.py
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
+      - name: 🚀 Run bot
+        run: python app/main.py
