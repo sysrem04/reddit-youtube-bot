@@ -1,29 +1,32 @@
+import os
 import praw
 import requests
-import os
-import uuid
+import random
 
-def fetch_reddit_video():
-reddit = praw.Reddit(
-    client_id=os.getenv("REDDIT_CLIENT_ID"),
-    client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
-    user_agent=os.getenv("REDDIT_USER_AGENT")
-)
+def fetch_reddit_video(subreddit_name="kactress"):
+    print("📥 Fetching videos from Reddit...")
 
+    reddit = praw.Reddit(
+        client_id=os.getenv("REDDIT_CLIENT_ID"),
+        client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
+        user_agent=os.getenv("REDDIT_USER_AGENT")
     )
 
-    subreddit = reddit.subreddit("kactress")
-    for post in subreddit.hot(limit=10):
-        if post.is_video and not post.stickied:
-            video_url = post.media["reddit_video"]["fallback_url"]
-            filename = f"downloads/{uuid.uuid4()}.mp4"
-            os.makedirs("downloads", exist_ok=True)
+    subreddit = reddit.subreddit(subreddit_name)
+    posts = list(subreddit.hot(limit=20))
 
-            with requests.get(video_url, stream=True) as r:
-                with open(filename, "wb") as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        f.write(chunk)
+    video_posts = [post for post in posts if hasattr(post, "media") and post.media]
 
-            return post.title, filename
+    if not video_posts:
+        raise Exception("❌ No video posts found.")
 
-    return "No valid video found", "downloads/sample.mp4"
+    post = random.choice(video_posts)
+    title = post.title
+    video_url = post.media["reddit_video"]["fallback_url"]
+
+    video_path = "video.mp4"
+    with open(video_path, "wb") as f:
+        f.write(requests.get(video_url).content)
+
+    print(f"🎬 Using original Reddit video: {title}")
+    return title, video_path
