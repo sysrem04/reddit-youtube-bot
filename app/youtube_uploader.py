@@ -1,46 +1,28 @@
 import os
+import json
 import google.auth.transport.requests
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
 
 def authenticate_youtube():
-    print("🔐 Authenticating YouTube...")
+    client_id = os.environ['YOUTUBE_CLIENT_ID']
+    client_secret = os.environ['YOUTUBE_CLIENT_SECRET']
+    refresh_token = os.environ['YOUTUBE_REFRESH_TOKEN']
 
-    creds = Credentials.from_authorized_user_info({
-        "client_id": os.getenv("YT_CLIENT_ID"),
-        "client_secret": os.getenv("YT_CLIENT_SECRET"),
-        "refresh_token": os.getenv("YT_REFRESH_TOKEN"),
-        "token_uri": "https://oauth2.googleapis.com/token"
-    })
-
-    request = google.auth.transport.requests.Request()
-    creds.refresh(request)
-
-    return build("youtube", "v3", credentials=creds)
-
-def upload_video(youtube, title, video_path):
-    print("🚀 Uploading video to YouTube...")
-
-    request_body = {
-        "snippet": {
-            "title": title,
-            "description": "Reposted from Reddit r/kactress",
-            "tags": ["shorts", "reddit", "kactress"],
-            "categoryId": "22"
-        },
-        "status": {
-            "privacyStatus": "public",
-            "selfDeclaredMadeForKids": False,
-        }
+    creds_data = {
+        "token": None,
+        "refresh_token": refresh_token,
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "scopes": ["https://www.googleapis.com/auth/youtube.upload"]
     }
 
-    media_file = MediaFileUpload(video_path, mimetype="video/mp4", resumable=True)
-
-    response = youtube.videos().insert(
-        part="snippet,status",
-        body=request_body,
-        media_body=media_file
-    ).execute()
-
-    print(f"✅ Upload successful! Video ID: {response['id']}")
+    creds = Credentials.from_authorized_user_info(info=creds_data)
+    
+    if creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+    
+    youtube = build('youtube', 'v3', credentials=creds)
+    return youtube
