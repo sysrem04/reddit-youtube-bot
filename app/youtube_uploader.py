@@ -1,13 +1,12 @@
 import os
-import json
 import google.auth.transport.requests
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 def authenticate_youtube():
-    client_id = os.environ['YOUTUBE_CLIENT_ID']
-    client_secret = os.environ['YOUTUBE_CLIENT_SECRET']
+    client_id = os.environ['YT_CLIENT_ID']
+    client_secret = os.environ['YT_CLIENT_SECRET']
     refresh_token = os.environ['YOUTUBE_REFRESH_TOKEN']
 
     creds_data = {
